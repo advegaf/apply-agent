@@ -1,0 +1,268 @@
+% Resume source. One file, several variants. See docs/RESUME.md.
+% Build with build.sh.
+%   \variant : ios | be | prod   (track)
+%   \grad    : aug | dec         (graduation date; only dec is built today)
+%   \gs      : 0  | 1            (employer-facing: genericises current-employer detail, requires variant=be)
+%   \phone   : optional; the header element is omitted entirely when unset
+%
+% Every variant is matched EXPLICITLY. There is no \else fallthrough: an
+% unknown \variant is a hard build error, not a silently mis-labeled PDF.
+%
+% No em dashes anywhere in body copy (en dashes in date ranges only).
+% No icon fonts, and NO LETTERSPACING ON SECTION HEADINGS: microtype tracking
+% injects real inter-glyph advances into the text layer, so \textls{EDUCATION}
+% extracts as "E D U C AT I O N" and an ATS that segments a resume by matching
+% header tokens finds neither Education nor Projects. build.sh gates this now.
+%
+% The employer-facing build uses XeLaTeX with Charter (macOS system font); the other
+% variants build under pdfLaTeX with Times. build.sh selects the engine.
+
+\documentclass[letterpaper,10pt]{article}
+
+% Font block branches on the compile engine (iftex).
+%   XeLaTeX  -> Charter via fontspec (the premium employer-facing build; Charter ships
+%              with macOS and has true small caps + lining figures).
+%   pdfLaTeX -> Times via mathptmx.
+% ATS needs T1 encoding, scalable Type1 outlines and a clean text layer; it does
+% not need this particular Times clone. newtxtext is a drop-in upgrade (true
+% small caps, better kerning, same metrics and extraction profile) but is not in
+% this TeX install; `sudo tlmgr install newtx` then swap the mathptmx line.
+\usepackage{iftex}
+\ifxetex
+  \usepackage{fontspec}
+  \setmainfont{Charter}[Numbers=Lining, Ligatures=TeX]
+  % Real small caps, no letterspacing: they carry real advance widths and so
+  % extract as clean words.
+  \newfontfamily\headfont{Charter}[Letters=SmallCaps, Numbers=Lining,
+    Ligatures=TeX]
+  \newcommand{\smcp}[1]{{\headfont\bfseries #1}}
+  \usepackage[protrusion=true]{microtype}
+\else
+  \usepackage[T1]{fontenc}        % T1 so fi/ffi ligatures extract cleanly for ATS
+  \usepackage[utf8]{inputenc}
+  \usepackage{mathptmx}           % Times: scalable Type1, narrow, clean extraction
+  \usepackage{textcomp}           % \textbullet from TS1/Nimbus rather than the
+                                  % Computer Modern symbol font, which lands in
+                                  % the PDF as a Type 3 bitmap
+  \usepackage[tracking=true]{microtype}
+  % Plain caps. Presence comes from size and weight, never from tracking.
+  \newcommand{\smcp}[1]{\MakeUppercase{#1}}
+\fi
+\usepackage[top=0.34in,bottom=0.34in,left=0.5in,right=0.5in]{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\hyphenpenalty=9000               % keep technical terms from breaking across lines
+\tolerance=2000
+\emergencystretch=1em             % lets TeX find breaks without stranding words
+
+% ---------- palette ----------
+% Zero-decoration standard: hierarchy comes from weight, size and spacing, not
+% colour. Ink carries every structural element. Gray is permitted ONLY for
+% locations and header separators. Links keep a restrained blue because they are
+% the proof layer (App Store, live site, GitHub) and must never read as dead text.
+% The rules sit LIGHTER than both links and locations: a repeated decorative
+% element must not out-print content, which is what 0.5pt #3A3A3A was doing.
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{accent}{HTML}{1A1A1A} % kept as a name so no \color{accent} site is missed
+\definecolor{muted}{HTML}{4A5260}
+\definecolor{rulecol}{HTML}{9A9A9A}
+\definecolor{linkcol}{HTML}{1A4A8A}
+
+\color{ink}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+% Charter sets taller than Times, so the xetex build needs tighter leading to
+% hold one page. 0.90 is the floor: do not tighten further to absorb content.
+\ifxetex\linespread{0.90}\else\linespread{0.96}\fi
+\raggedbottom
+\raggedright
+
+% ---------- variant flags ----------
+\providecommand{\variant}{ios}
+\providecommand{\grad}{dec}
+\providecommand{\gs}{0}
+\providecommand{\phone}{}
+
+\newif\ifios  \newif\ifbe  \newif\ifprod  \newif\ifdec  \newif\ifgs
+\def\cmpval{}
+\def\cmpempty{}   % stable empty comparator; \cmpval is clobbered by the tests below
+\edef\tmp{\variant}\def\cmpval{ios}\ifx\tmp\cmpval\iostrue\else\iosfalse\fi
+\edef\tmp{\variant}\def\cmpval{be}\ifx\tmp\cmpval\betrue\else\befalse\fi
+\edef\tmp{\variant}\def\cmpval{prod}\ifx\tmp\cmpval\prodtrue\else\prodfalse\fi
+\edef\tmp{\grad}\def\cmpval{dec}\ifx\tmp\cmpval\dectrue\else\decfalse\fi
+\edef\tmp{\gs}\def\cmpval{1}\ifx\tmp\cmpval\gstrue\else\gsfalse\fi
+
+% Unknown-variant guard. Without this, \ifios\else means "anything that is not
+% iOS" and a typo (or a missed branch) ships backend content in a PDF named for
+% another track: it compiles clean and passes every page and word-count gate.
+\ifios\else\ifbe\else\ifprod\else
+  \errmessage{Unknown variant '\variant' (expected ios, be or prod)}%
+\fi\fi\fi
+
+% gs=1 genericises current-employer detail and is only meaningful on the
+% backend track.
+\ifgs\ifios\errmessage{gs=1 requires variant=be}\fi\fi
+\ifgs\ifprod\errmessage{gs=1 requires variant=be}\fi\fi
+
+\ifdec\newcommand{\graddate}{December 2027}\else\newcommand{\graddate}{August 2027}\fi
+
+% ---------- helpers ----------
+% Bold budget: \m marks ONE metric per bullet, the strongest number. With colour
+% gone, bold is the only emphasis channel left, so spending it on every figure
+% leaves the scanner no ranking. \mbox keeps a metric from being severed across
+% a line break, which was splitting a bolded figure from its unit across seven inches.
+\newcommand{\m}[1]{\textbf{\mbox{#1}}}
+
+\newcommand{\link}[2]{\href{#1}{\color{linkcol}#2}}
+
+% Centred classic header: a little positive tracking suits it. (Flush-left
+% wanted the opposite, hence the earlier negative value.)
+\ifxetex
+  \newcommand{\bigname}[1]{{\fontsize{23}{26}\selectfont\bfseries #1}}
+\else
+  \newcommand{\bigname}[1]{{\fontsize{23}{26}\selectfont\bfseries\textls[40]{#1}}}
+\fi
+
+% Section spacing is deterministic: \resheading is the ONLY thing that sets the
+% gap between sections, and \role/\project the only thing that sets the gap
+% between entries. Nothing appends trailing space, so the measured gap no longer
+% depends on which macro happened to run last. 10pt above / 5pt below is the
+% 2:1 that makes a heading group downward with its own content.
+\newcommand{\resheading}[1]{%
+  \vspace{7pt}%
+  {\bfseries\fontsize{10.5}{12}\selectfont\smcp{#1}}\\[3pt]%
+  {\color{rulecol}\hrule height 0.4pt}%
+  \vspace{4pt}%
+}
+
+% \role{title}{org}{dates}{location}
+% The employer is bold and is the only left-edge bold in the block, which is what
+% the F-pattern scan anchors on. Dates are NOT bold: they were outweighing the
+% employer name and spending the loudest channel on a lookup field.
+\newcommand{\role}[4]{%
+  \vspace{4pt}%
+  {\bfseries #2}\hfill{#3}\\[1.5pt]%
+  {\itshape #1}\hfill{\itshape\color{muted}#4}\\[1.5pt]%
+}
+
+% \project{name}{stack}{link text}{url}
+% The stack line is the keyword layer recruiters visually grep, so it sits in
+% regular ink rather than muted italic.
+\newcommand{\project}[4]{%
+  \vspace{4pt}%
+  {\bfseries #1}\hfill{\small\link{#4}{#3}}\\[1.5pt]%
+  {\small #2}\\[1.5pt]%
+}
+
+% \projectdual{name}{stack}{text1}{url1}{text2}{url2}
+% For work with two pieces of public proof (a shipped app and a live site). The
+% label is ink, not blue, so it survives grayscale print as a credential; only
+% the bare URL is a link.
+\newcommand{\projectdual}[6]{%
+  \vspace{4pt}%
+  {\bfseries #1}\hfill{\small\link{#4}{#3}{\color{muted}\;\textbullet\;}\href{#6}{#5}}\\[1.5pt]%
+  {\small #2}\\[1.5pt]%
+}
+
+% \projectlinknote{name}{stack}{linktext}{url}{note}
+% GitHub link plus a muted status note (TestFlight has no public URL here).
+\newcommand{\projectlinknote}[5]{%
+  \vspace{4pt}%
+  {\bfseries #1}\hfill{\small\link{#4}{#3}{\color{muted}\;\textbullet\;#5}}\\[1.5pt]%
+  {\small #2}\\[1.5pt]%
+}
+
+% \projectplain{name}{stack}{right-hand note}
+% For work with no public URL yet. A dead link is strictly worse than no link:
+% a recruiter who clicks through to a 404 has learned something bad about your
+% attention to detail, which is the opposite of what the link is for.
+\newcommand{\projectplain}[3]{%
+  \vspace{4pt}%
+  {\bfseries #1}\hfill{\small\color{muted}#3}\\[1.5pt]%
+  {\small #2}\\[1.5pt]%
+}
+
+% itemsep at 0.6pt put bullets 4% further apart than the lines inside them,
+% which is below perceptual threshold: each block read as one gray paragraph
+% with dots in it. 2.5pt makes every bullet a discrete claim.
+\newenvironment{bullets}
+  {\begin{itemize}[leftmargin=12pt,topsep=1pt,itemsep=2.5pt,parsep=0pt,
+                   partopsep=0pt,label={\textbullet}]}
+  {\end{itemize}}
+
+\hypersetup{pdftitle={\candidatename\ - \rolelabel},pdfauthor={\candidatename},pdfsubject={Software Engineering}}
+
+% ---------- shared fact-bearing bullets ----------
+% Defined once, used by several tracks. Tracks choose ordering and inclusion,
+% never wording: three near-duplicate project blocks would otherwise triple the
+% surface for facts to drift apart between PDFs.
+%
+% NOTE on the revenue bullet: it reports PAYMENTS and a START DATE, not MRR.
+% 892 charges totalling $24,659.33 over Mar-Jul 2026 is ~$5.6K/month of total
+% volume, so a claim of $8K/month RECURRING could not be true, and "over what
+% period" is the first question anyone asks about a processed-total. Naming the
+% start date makes the figure more checkable, not less.
+
+% Set once; used in PDF metadata. The embedded title is what many systems
+% display instead of the filename, so it should name you and the role.
+\providecommand{\candidatename}{Your Name}
+\providecommand{\rolelabel}{Software Engineer Intern}
+
+\begin{document}
+
+% =============================================================================
+% EVERYTHING BELOW IS YOURS. Replace it.
+%
+% The machinery above is the reusable part: variant flags with an unknown-variant
+% guard so a typo fails the build instead of silently emitting the wrong track,
+% dual engine support, and the macro set (\role, \project, \projectdual,
+% \projectlinknote, \projectplain).
+%
+% Two rules the gates enforce, worth knowing before you write:
+%
+%   1. No letterspacing on section headings. It injects inter-glyph advances into
+%      the text layer, so "PROJECTS" extracts as "P RO J E C T S" and an ATS that
+%      segments by heading drops the whole section. This cost three of four PDFs
+%      once and no gate caught it.
+%   2. One bolded metric per bullet, via \m{}. Bold is the only emphasis channel
+%      left once colour is gone, so it needs a budget. Thirty bold runs rank
+%      nothing.
+% =============================================================================
+
+\begin{center}
+  {\bigname{Your Name}}\\[2pt]
+  \small
+  \href{mailto:you@example.edu}{you@example.edu} \textbullet\
+  \phonefield \textbullet\
+  \href{https://linkedin.com/in/you}{linkedin.com/in/you} \textbullet\
+  \href{https://github.com/you}{github.com/you}
+\end{center}
+
+\resheading{Education}
+\role{Your University}{City, ST}{B.S. Your Major}{Expected Month Year}
+Relevant coursework: list plain course names, not internal course numbers. A
+recruiter searches "operating systems", never "CSCE 313".
+
+\resheading{Experience}
+\role{Employer}{City, ST}{Title}{Mon Year -- Mon Year}
+\begin{bullets}
+  \item Result first, then method. \m{One bolded number} per bullet, and only if
+        you can say how it was measured.
+  \item Two lines maximum. If it runs to three, the enumeration goes before the
+        outcome does.
+\end{bullets}
+
+\resheading{Projects}
+\project{Project}{Stack, listed plainly}{yoursite.com}{https://yoursite.com}
+\begin{bullets}
+  \item What it does and what was hard about it. Name the failure you fixed, not
+        the feature you shipped.
+\end{bullets}
+
+\resheading{Technical Skills}
+\textbf{Languages:} the ones you would defend in an interview \\
+\textbf{Frameworks:} same standard \\
+\textbf{Tools:} same standard
+
+\end{document}

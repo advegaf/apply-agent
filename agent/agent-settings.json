@@ -1,0 +1,41 @@
+{
+  "_comment": [
+    "Permission rules for the unattended agent (claude -p in agent/pipeline.sh).",
+    "IMPORTANT: file permissions are matched on Edit(path) rules only. An",
+    "Edit(path) rule covers every file-editing tool, Write included. A Write(path)",
+    "rule matches nothing and is silently ignored, with a warning on every run.",
+    "So every path rule here is written as Edit(...). Do not add Write(...) back:",
+    "in deny it is a no-op that looks like protection, and in allow it is a no-op",
+    "that looks like a grant."
+  ],
+  "permissions": {
+    "deny": [
+      "Edit(./resume/**)",
+      "Edit(./applications/profile/**)",
+      "Edit(./NUMBERS.md)",
+      "Edit(./TAILORING.md)",
+      "Edit(./INTERVIEW-DEFENSE.md)",
+      "Edit(./agent/pipeline.sh)",
+      "Edit(./agent/prompt.md)",
+      "Edit(./agent/inbox-prompt.md)",
+      "Edit(./agent/agent-settings.json)",
+      "Bash(chflags:*)",
+      "Bash(chmod:*)",
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "allow": [
+      "Read(./**)",
+      "Edit(./applications/**)",
+      "Edit(./agent/state/**)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(mkdir:*)",
+      "Bash(pdftotext:*)"
+    ]
+  }
+}

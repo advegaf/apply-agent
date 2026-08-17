@@ -1,0 +1,39 @@
+# Everything about one person lives here and none of it is committed.
+private/
+
+# Per-candidate build configuration. The examples are tracked; the real ones are
+# not. internal-strings.txt is the important one: that list IS the confidential
+# material, and a clone carries git history, so redacting later does not help.
+resume/candidate.env
+resume/gates.conf
+resume/links.conf
+resume/drift.conf
+resume/provisional.conf
+resume/internal-strings.txt
+
+# Built PDFs and LaTeX intermediates.
+resume/out/
+resume/build/
+
+# Agent runtime. seen.json is your memory of which listings you have already
+# considered; it starts empty and is yours.
+agent/config.env
+agent/state/*.json
+agent/state/*.log
+agent/state/*.txt
+agent/state/jd-cache/
+agent/state/listings*.json
+agent/__pycache__/
+__pycache__/
+
+# Prepared applications contain your drafted answers and your resume.
+applications/*/
+!applications/ats-check.sh
+
+# macOS
+.DS_Store
+Icon?
+Icon
+
+# ...but keep the explainer so a fresh clone knows what goes here.
+!private/README.md

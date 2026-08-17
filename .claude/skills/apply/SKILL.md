@@ -77,7 +77,7 @@ asked, or that a claim is unsupported. Those are still yours to judge.
 
 ## Hard pauses — never proceed past these
 
-- Any ASK-ANGEL-class question (outside business, outside employment, conflicts of
+- Any ASK-HUMAN-class question (outside business, outside employment, conflicts of
   interest). Stop, read it aloud, wait.
 - Voluntary self-identification. Prefill from `answers.yml`, then pause to confirm.
 - Legal attestations and terms consent. Pause.
